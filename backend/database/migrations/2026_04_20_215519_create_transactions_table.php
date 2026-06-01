@@ -7,26 +7,28 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Jalankan migrasi.
      */
     public function up(): void
     {
-        Schema::create('transactions', function (Blueprint $table) {
+        Schema::create('transaksi', function (Blueprint $table) {
             $table->id();
-            $table->string('invoice_number')->unique();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('branch_id')->constrained()->onDelete('cascade');
+            $table->string('nomor_invoice')->unique();
+            $table->unsignedBigInteger('id_pengguna');
+            $table->unsignedBigInteger('id_cabang');
+            $table->foreign('id_pengguna')->references('id')->on('pengguna')->onDelete('cascade');
+            $table->foreign('id_cabang')->references('id')->on('cabang')->onDelete('cascade');
             $table->decimal('total', 15, 2);
-            $table->string('status')->default('completed');
+            $table->string('status')->default('selesai');
             $table->timestamps();
         });
     }
 
     /**
-     * Reverse the migrations.
+     * Balikkan migrasi.
      */
     public function down(): void
     {
-        Schema::dropIfExists('transactions');
+        Schema::dropIfExists('transaksi');
     }
 };

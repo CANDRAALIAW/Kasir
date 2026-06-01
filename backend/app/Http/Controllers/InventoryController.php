@@ -12,58 +12,68 @@ class InventoryController extends Controller
 {
     public function restock(Request $request)
     {
+        if ($request->has('product_id')) {
+            $request->merge(['id_produk' => $request->product_id]);
+        }
+        if ($request->has('quantity')) {
+            $request->merge(['kuantitas' => $request->quantity]);
+        }
+        if ($request->has('note')) {
+            $request->merge(['catatan' => $request->note]);
+        }
+
         $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
-            'note' => 'nullable|string',
+            'id_produk' => 'required|exists:produk,id',
+            'kuantitas' => 'required|integer|min:1',
+            'catatan' => 'nullable|string',
         ]);
 
         return DB::transaction(function () use ($request) {
-            $product = Product::findOrFail($request->product_id);
-            $oldStock = $product->stock;
-            $product->increment('stock', $request->quantity);
+            $produk = Product::findOrFail($request->id_produk);
+            $stokLama = $produk->stok;
+            $produk->increment('stok', $request->kuantitas);
 
             StockLog::create([
-                'product_id' => $product->id,
-                'user_id' => $request->user()->id,
-                'type' => 'in',
-                'quantity' => $request->quantity,
-                'note' => $request->note,
+                'id_produk' => $produk->id,
+                'id_pengguna' => $request->user()->id,
+                'jenis' => 'masuk',
+                'kuantitas' => $request->kuantitas,
+                'catatan' => $request->catatan,
             ]);
 
             ActivityLog::create([
-                'user_id' => $request->user()->id,
-                'action' => 'Restock',
-                'description' => "Restocked {$product->name} by {$request->quantity}",
-                'properties' => [
-                    'product_id' => $product->id,
-                    'old_stock' => $oldStock,
-                    'new_stock' => $product->stock,
+                'id_pengguna' => $request->user()->id,
+                'aksi' => 'Restock',
+                'deskripsi' => "Restok {$produk->nama} sebanyak {$request->kuantitas}",
+                'properti' => [
+                    'id_produk' => $produk->id,
+                    'stok_lama' => $stokLama,
+                    'stok_baru' => $produk->stok,
                 ],
-                'ip_address' => $request->ip(),
+                'alamat_ip' => $request->ip(),
             ]);
 
             return response()->json([
-                'status' => 'success',
-                'message' => 'Stock updated successfully',
-                'current_stock' => $product->stock
+                'status' => 'berhasil',
+                'message' => 'Stok berhasil diperbarui',
+                'stok_sekarang' => $produk->stok
             ]);
         });
     }
 
     public function history(Request $request)
     {
-        $branchId = $request->query('branch_id');
-        $query = StockLog::with(['product', 'user'])->latest();
+        $idCabang = $request->query('branch_id');
+        $query = StockLog::with(['produk', 'pengguna'])->latest();
 
-        if ($branchId) {
-            $query->whereHas('product', function ($q) use ($branchId) {
-                $q->where('branch_id', $branchId);
+        if ($idCabang) {
+            $query->whereHas('produk', function ($q) use ($idCabang) {
+                $q->where('id_cabang', $idCabang);
             });
         }
 
         return response()->json([
-            'status' => 'success',
+            'status' => 'berhasil',
             'data' => $query->paginate(20)
         ]);
     }

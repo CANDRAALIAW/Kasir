@@ -6,15 +6,30 @@ use Illuminate\Database\Eloquent\Model;
 
 class StockLog extends Model
 {
-    protected $fillable = ['product_id', 'user_id', 'type', 'quantity', 'note'];
+    // Nama tabel database dalam Bahasa Indonesia
+    protected $table = 'log_stok';
 
-    public function product()
+    protected $fillable = ['id_produk', 'id_pengguna', 'jenis', 'kuantitas', 'catatan'];
+
+    public function produk()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'id_produk');
     }
 
+    // Alias untuk kompatibilitas
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'id_produk');
+    }
+
+    public function pengguna()
+    {
+        return $this->belongsTo(User::class, 'id_pengguna');
+    }
+
+    // Alias untuk kompatibilitas
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'id_pengguna');
     }
 }

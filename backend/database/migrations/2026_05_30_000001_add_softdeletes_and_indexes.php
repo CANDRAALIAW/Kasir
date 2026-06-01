@@ -8,38 +8,38 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Add soft delete to products
-        Schema::table('products', function (Blueprint $table) {
+        // Tambah soft delete ke produk
+        Schema::table('produk', function (Blueprint $table) {
             $table->softDeletes();
         });
 
-        // Add indexes to activity_logs for performance
-        Schema::table('activity_logs', function (Blueprint $table) {
-            $table->index('user_id');
-            $table->index('action');
+        // Tambah indeks ke log_aktivitas untuk performa
+        Schema::table('log_aktivitas', function (Blueprint $table) {
+            $table->index('id_pengguna');
+            $table->index('aksi');
             $table->index('created_at');
         });
 
-        // Add indexes to transactions for report performance
-        Schema::table('transactions', function (Blueprint $table) {
-            $table->index(['branch_id', 'created_at']);
+        // Tambah indeks ke transaksi untuk performa laporan
+        Schema::table('transaksi', function (Blueprint $table) {
+            $table->index(['id_cabang', 'created_at']);
         });
     }
 
     public function down(): void
     {
-        Schema::table('products', function (Blueprint $table) {
+        Schema::table('produk', function (Blueprint $table) {
             $table->dropSoftDeletes();
         });
 
-        Schema::table('activity_logs', function (Blueprint $table) {
-            $table->dropIndex(['user_id']);
-            $table->dropIndex(['action']);
+        Schema::table('log_aktivitas', function (Blueprint $table) {
+            $table->dropIndex(['id_pengguna']);
+            $table->dropIndex(['aksi']);
             $table->dropIndex(['created_at']);
         });
 
-        Schema::table('transactions', function (Blueprint $table) {
-            $table->dropIndex(['branch_id', 'created_at']);
+        Schema::table('transaksi', function (Blueprint $table) {
+            $table->dropIndex(['id_cabang', 'created_at']);
         });
     }
 };

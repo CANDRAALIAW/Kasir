@@ -13,152 +13,188 @@ class TransactionController extends Controller
 {
     public function store(Request $request)
     {
-        $request->validate([
-            'items' => 'required|array',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.qty' => 'required|integer|min:1',
-            'total' => 'required|numeric',
-            'payment_method' => 'string|in:tunai,qris,transfer',
-            'payment_amount' => 'numeric',
-            'change_amount' => 'numeric',
-            'booking_id' => 'nullable|exists:cat_bookings,id',
-        ]);
-
-        $user = $request->user();
-        
-        if (!$user->branch_id) {
-            return response()->json(['message' => 'User is not assigned to any branch'], 403);
+        if ($request->has('payment_method')) {
+            $request->merge(['metode_pembayaran' => $request->payment_method]);
+        }
+        if ($request->has('payment_amount')) {
+            $request->merge(['jumlah_bayar' => $request->payment_amount]);
+        }
+        if ($request->has('change_amount')) {
+            $request->merge(['jumlah_kembalian' => $request->change_amount]);
+        }
+        if ($request->has('booking_id')) {
+            $request->merge(['id_pemesanan' => $request->booking_id]);
+        }
+        if ($request->has('items')) {
+            $items = $request->items;
+            foreach ($items as &$item) {
+                if (isset($item['product_id'])) {
+                    $item['id_produk'] = $item['product_id'];
+                }
+                if (isset($item['qty'])) {
+                    $item['jumlah'] = $item['qty'];
+                }
+            }
+            $request->merge(['items' => $items]);
         }
 
-        return DB::transaction(function () use ($request, $user) {
-            $invoiceNumber = 'INV-' . strtoupper(Str::random(10));
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id_produk' => 'required|exists:produk,id',
+            'items.*.jumlah' => 'required|integer|min:1',
+            'total' => 'required|numeric',
+            'metode_pembayaran' => 'string|in:tunai,qris,transfer',
+            'jumlah_bayar' => 'numeric',
+            'jumlah_kembalian' => 'numeric',
+            'id_pemesanan' => 'nullable|exists:pemesanan_kucing,id',
+        ]);
 
-            $transaction = Transaction::create([
-                'invoice_number' => $invoiceNumber,
-                'user_id' => $user->id,
-                'branch_id' => $user->branch_id,
+        $pengguna = $request->user();
+        
+        if (!$pengguna->id_cabang) {
+            return response()->json(['message' => 'Pengguna tidak ditugaskan ke cabang manapun'], 403);
+        }
+
+        return DB::transaction(function () use ($request, $pengguna) {
+            $nomorInvoice = 'INV-' . strtoupper(Str::random(10));
+
+            $transaksi = Transaction::create([
+                'nomor_invoice' => $nomorInvoice,
+                'id_pengguna' => $pengguna->id,
+                'id_cabang' => $pengguna->id_cabang,
                 'total' => $request->total,
-                'status' => 'completed',
-                'payment_method' => $request->payment_method ?? 'tunai',
-                'payment_amount' => $request->payment_amount ?? 0,
-                'change_amount' => $request->change_amount ?? 0,
+                'status' => 'selesai',
+                'metode_pembayaran' => $request->metode_pembayaran ?? 'tunai',
+                'jumlah_bayar' => $request->jumlah_bayar ?? 0,
+                'jumlah_kembalian' => $request->jumlah_kembalian ?? 0,
             ]);
 
             foreach ($request->items as $item) {
-                $product = Product::lockForUpdate()->findOrFail($item['product_id']);
+                $produk = Product::lockForUpdate()->findOrFail($item['id_produk']);
                 
-                $unitPrice = $product->price;
-                $subtotal = $unitPrice * $item['qty'];
+                $hargaSatuan = $produk->harga;
+                $subtotal = $hargaSatuan * $item['jumlah'];
 
                 TransactionDetail::create([
-                    'transaction_id' => $transaction->id,
-                    'product_id' => $product->id,
-                    'price' => $unitPrice,
-                    'qty' => $item['qty'],
+                    'id_transaksi' => $transaksi->id,
+                    'id_produk' => $produk->id,
+                    'harga_satuan' => $hargaSatuan,
+                    'jumlah' => $item['jumlah'],
                     'subtotal' => $subtotal,
                 ]);
 
-                // Services don't have stock management
-                if (($product->type ?? 'product') !== 'service') {
-                    if ($product->stock < $item['qty']) {
-                        throw new \Exception("Insufficient stock for product: {$product->name}");
+                // Layanan tidak memiliki manajemen stok
+                if (($produk->jenis ?? 'produk') !== 'layanan') {
+                    if ($produk->stok < $item['jumlah']) {
+                        throw new \Exception("Stok tidak mencukupi untuk produk: {$produk->nama}");
                     }
 
-                    // Update stock
-                    $product->decrement('stock', $item['qty']);
+                    // Kurangi stok
+                    $produk->decrement('stok', $item['jumlah']);
 
-                    // Log stock movement
+                    // Catat pergerakan stok
                     \App\Models\StockLog::create([
-                        'product_id' => $product->id,
-                        'user_id' => $user->id,
-                        'type' => 'out',
-                        'quantity' => $item['qty'],
-                        'note' => "Sold via $invoiceNumber",
+                        'id_produk' => $produk->id,
+                        'id_pengguna' => $pengguna->id,
+                        'jenis' => 'keluar',
+                        'kuantitas' => $item['jumlah'],
+                        'catatan' => "Terjual melalui $nomorInvoice",
                     ]);
 
-                    // Check if stock is now critically low
-                    $updatedProduct = $product->fresh();
-                    if ($updatedProduct->stock <= $updatedProduct->minimum_stock) {
-                        // Create a mock WhatsApp Alert Log
+                    // Cek apakah stok sekarang sudah kritis
+                    $produkTerbaru = $produk->fresh();
+                    if ($produkTerbaru->stok <= $produkTerbaru->stok_minimum) {
+                        // Buat log peringatan stok kritis (simulasi WhatsApp Alert)
                         \App\Models\ActivityLog::create([
-                            'user_id' => $user->id,
-                            'action' => 'WA Critical Stock Alert',
-                            'description' => "[WA ALERT] Dikirim ke Admin: Stok produk '{$product->name}' kritis! Sisa stok saat ini: {$updatedProduct->stock} (Batas minimum: {$updatedProduct->minimum_stock}).",
-                            'properties' => [
-                                'product_id' => $product->id,
-                                'product_name' => $product->name,
-                                'remaining_stock' => $updatedProduct->stock,
-                                'minimum_stock' => $updatedProduct->minimum_stock,
-                                'recipient' => 'Admin Petshop (081234567890)',
+                            'id_pengguna' => $pengguna->id,
+                            'aksi' => 'Peringatan Stok Kritis WA',
+                            'deskripsi' => "[PERINGATAN WA] Dikirim ke Admin: Stok produk '{$produk->nama}' kritis! Sisa stok saat ini: {$produkTerbaru->stok} (Batas minimum: {$produkTerbaru->stok_minimum}).",
+                            'properti' => [
+                                'id_produk' => $produk->id,
+                                'nama_produk' => $produk->nama,
+                                'sisa_stok' => $produkTerbaru->stok,
+                                'stok_minimum' => $produkTerbaru->stok_minimum,
+                                'penerima' => 'Admin Petshop (081234567890)',
                             ],
-                            'ip_address' => $request->ip(),
+                            'alamat_ip' => $request->ip(),
                         ]);
                     }
                 }
             }
 
-            // Update linked cat booking if present
-            if ($request->has('booking_id')) {
-                $booking = \App\Models\CatBooking::find($request->booking_id);
-                if ($booking) {
-                    $booking->update([
-                        'status' => 'completed',
-                        'transaction_id' => $transaction->id,
+            // Perbarui pemesanan kucing yang terhubung jika ada
+            if ($request->has('id_pemesanan')) {
+                $pemesanan = \App\Models\CatBooking::find($request->id_pemesanan);
+                if ($pemesanan) {
+                    $pemesanan->update([
+                        'status' => 'selesai',
+                        'id_transaksi' => $transaksi->id,
                     ]);
                 }
             }
 
             \App\Models\ActivityLog::create([
-                'user_id' => $user->id,
-                'action' => 'Checkout',
-                'description' => "Kasir melakukan transaksi {$invoiceNumber} sebesar Rp " . number_format($request->total, 0, ',', '.'),
-                'properties' => [
-                    'transaction_id' => $transaction->id,
-                    'invoice_number' => $invoiceNumber,
+                'id_pengguna' => $pengguna->id,
+                'aksi' => 'Checkout',
+                'deskripsi' => "Kasir melakukan transaksi {$nomorInvoice} sebesar Rp " . number_format($request->total, 0, ',', '.'),
+                'properti' => [
+                    'id_transaksi' => $transaksi->id,
+                    'nomor_invoice' => $nomorInvoice,
                     'total' => $request->total,
                 ],
-                'ip_address' => $request->ip(),
+                'alamat_ip' => $request->ip(),
             ]);
 
             return response()->json([
-                'message' => 'Transaction completed successfully',
-                'transaction' => $transaction->load('details.product')
+                'message' => 'Transaksi berhasil diselesaikan',
+                'transaksi' => $transaksi->load('detailTransaksi.produk')
             ], 201);
         });
     }
 
     public function index(Request $request)
     {
-        $branchId = $request->query('branch_id');
-        $query = Transaction::with(['user', 'details.product', 'branch']);
+        $idCabang = $request->query('branch_id');
+        $query = Transaction::with(['pengguna', 'detailTransaksi.produk', 'cabang']);
 
-        if ($branchId) {
-            $query->where('branch_id', $branchId);
+        if ($idCabang) {
+            $query->where('id_cabang', $idCabang);
         }
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('invoice_number', 'like', "%{$search}%")
-                  ->orWhereHas('user', function($qu) use ($search) {
-                      $qu->where('name', 'like', "%{$search}%");
+                $q->where('nomor_invoice', 'like', "%{$search}%")
+                  ->orWhereHas('pengguna', function($qu) use ($search) {
+                      $qu->where('nama', 'like', "%{$search}%");
                   });
             });
         }
 
-        if ($request->has('payment_method') && $request->payment_method != '' && $request->payment_method != 'semua') {
-            $query->where('payment_method', strtolower($request->payment_method));
+        if ($request->has('metode_pembayaran') && $request->metode_pembayaran != '' && $request->metode_pembayaran != 'semua') {
+            $query->where('metode_pembayaran', strtolower($request->metode_pembayaran));
         }
 
+        if ($request->has('tanggal_mulai') && $request->tanggal_mulai != '') {
+            $query->whereDate('created_at', '>=', $request->tanggal_mulai);
+        }
+
+        if ($request->has('tanggal_selesai') && $request->tanggal_selesai != '') {
+            $query->whereDate('created_at', '<=', $request->tanggal_selesai);
+        }
+
+        // Dukungan parameter lama untuk kompatibilitas frontend
+        if ($request->has('payment_method') && $request->payment_method != '' && $request->payment_method != 'semua') {
+            $query->where('metode_pembayaran', strtolower($request->payment_method));
+        }
         if ($request->has('date_start') && $request->date_start != '') {
             $query->whereDate('created_at', '>=', $request->date_start);
         }
-
         if ($request->has('date_end') && $request->date_end != '') {
             $query->whereDate('created_at', '<=', $request->date_end);
         }
 
-        $transactions = $query->orderBy('created_at', 'desc')->get();
-        return \App\Http\Resources\TransactionResource::collection($transactions);
+        $transaksi = $query->orderBy('created_at', 'desc')->get();
+        return \App\Http\Resources\TransactionResource::collection($transaksi);
     }
 }

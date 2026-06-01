@@ -7,33 +7,32 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Jalankan migrasi.
      */
     public function up(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->integer('minimum_stock')->default(5)->after('stock');
+        Schema::table('produk', function (Blueprint $table) {
+            $table->integer('stok_minimum')->default(5)->after('stok');
         });
 
-        Schema::table('transactions', function (Blueprint $table) {
-            $table->string('payment_method')->default('tunai')->after('total');
-            $table->decimal('payment_amount', 15, 2)->default(0)->after('payment_method');
-            $table->decimal('change_amount', 15, 2)->default(0)->after('payment_amount');
+        Schema::table('transaksi', function (Blueprint $table) {
+            $table->string('metode_pembayaran')->default('tunai')->after('total');
+            $table->decimal('jumlah_bayar', 15, 2)->default(0)->after('metode_pembayaran');
+            $table->decimal('jumlah_kembalian', 15, 2)->default(0)->after('jumlah_bayar');
         });
     }
 
     /**
-     * Reverse the migrations.
+     * Balikkan migrasi.
      */
     public function down(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->dropColumn('minimum_stock');
+        Schema::table('produk', function (Blueprint $table) {
+            $table->dropColumn('stok_minimum');
         });
 
-        Schema::table('transactions', function (Blueprint $table) {
-            $table->dropColumn(['payment_method', 'payment_amount', 'change_amount']);
+        Schema::table('transaksi', function (Blueprint $table) {
+            $table->dropColumn(['metode_pembayaran', 'jumlah_bayar', 'jumlah_kembalian']);
         });
     }
 };
-

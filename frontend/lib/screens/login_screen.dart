@@ -29,7 +29,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (!success) {
-      _showError('Email atau kata sandi tidak valid');
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final errMsg = authProvider.errorMessage ?? 'Email atau kata sandi tidak valid';
+      _showError(errMsg);
     }
   }
 

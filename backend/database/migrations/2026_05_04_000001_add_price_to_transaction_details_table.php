@@ -7,22 +7,22 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Jalankan migrasi.
      */
     public function up(): void
     {
-        Schema::table('transaction_details', function (Blueprint $table) {
-            $table->decimal('price', 15, 2)->after('product_id')->comment('Unit price at time of transaction');
+        Schema::table('detail_transaksi', function (Blueprint $table) {
+            $table->decimal('harga_satuan', 15, 2)->after('id_produk')->comment('Harga satuan saat transaksi dilakukan');
         });
     }
 
     /**
-     * Reverse the migrations.
+     * Balikkan migrasi.
      */
     public function down(): void
     {
-        Schema::table('transaction_details', function (Blueprint $table) {
-            $table->dropColumn('price');
+        Schema::table('detail_transaksi', function (Blueprint $table) {
+            $table->dropColumn('harga_satuan');
         });
     }
 };

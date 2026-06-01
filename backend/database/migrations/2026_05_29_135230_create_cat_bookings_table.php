@@ -7,33 +7,36 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Jalankan migrasi.
      */
     public function up(): void
     {
-        Schema::create('cat_bookings', function (Blueprint $table) {
+        Schema::create('pemesanan_kucing', function (Blueprint $table) {
             $table->id();
-            $table->string('owner_name');
-            $table->string('owner_phone');
-            $table->string('cat_name');
-            $table->string('cat_breed');
-            $table->string('booking_type'); // 'grooming' or 'pethotel'
-            $table->foreignId('product_id')->constrained()->onDelete('cascade'); // service package
-            $table->decimal('price', 15, 2);
-            $table->dateTime('start_date');
-            $table->dateTime('end_date')->nullable();
-            $table->string('status')->default('pending'); // pending, ongoing, completed, cancelled
-            $table->foreignId('branch_id')->constrained()->onDelete('cascade');
-            $table->foreignId('transaction_id')->nullable()->constrained()->onDelete('set null');
+            $table->string('nama_pemilik');
+            $table->string('telepon_pemilik');
+            $table->string('nama_kucing');
+            $table->string('ras_kucing');
+            $table->string('jenis_pemesanan'); // 'grooming' atau 'pethotel'
+            $table->unsignedBigInteger('id_produk');
+            $table->foreign('id_produk')->references('id')->on('produk')->onDelete('cascade'); // paket layanan
+            $table->decimal('harga', 15, 2);
+            $table->dateTime('tanggal_mulai');
+            $table->dateTime('tanggal_selesai')->nullable();
+            $table->string('status')->default('menunggu'); // menunggu, berlangsung, selesai, dibatalkan
+            $table->unsignedBigInteger('id_cabang');
+            $table->foreign('id_cabang')->references('id')->on('cabang')->onDelete('cascade');
+            $table->unsignedBigInteger('id_transaksi')->nullable();
+            $table->foreign('id_transaksi')->references('id')->on('transaksi')->onDelete('set null');
             $table->timestamps();
         });
     }
 
     /**
-     * Reverse the migrations.
+     * Balikkan migrasi.
      */
     public function down(): void
     {
-        Schema::dropIfExists('cat_bookings');
+        Schema::dropIfExists('pemesanan_kucing');
     }
 };

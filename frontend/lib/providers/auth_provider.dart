@@ -22,10 +22,15 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      debugPrint('[LOGIN] Mengirim request ke: ${ApiService.baseUrl}/login');
+      debugPrint('[LOGIN] Email: $email');
       final response = await _apiService.post('/login', {
         'email': email,
         'password': password,
       });
+
+      debugPrint('[LOGIN] Response status: ${response.statusCode}');
+      debugPrint('[LOGIN] Response body: ${response.body}');
 
       final data = jsonDecode(response.body);
       final prefs = await SharedPreferences.getInstance();
@@ -39,9 +44,11 @@ class AuthProvider with ChangeNotifier {
       return true;
     } on HttpException catch (e) {
       _errorMessage = e.message;
-    } catch (e) {
+      debugPrint('[LOGIN] HttpException: ${e.statusCode} - ${e.message}');
+    } catch (e, stackTrace) {
       _errorMessage = 'An unexpected error occurred';
-      debugPrint('Login exception: $e');
+      debugPrint('[LOGIN] Exception: $e');
+      debugPrint('[LOGIN] StackTrace: $stackTrace');
     }
 
     _isLoading = false;

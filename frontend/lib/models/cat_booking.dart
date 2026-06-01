@@ -36,22 +36,35 @@ class CatBooking {
   });
 
   factory CatBooking.fromJson(Map<String, dynamic> json) {
+    String status = json['status'] ?? 'pending';
+    final statusMap = {
+      'menunggu': 'pending',
+      'berlangsung': 'ongoing',
+      'selesai': 'completed',
+      'dibatalkan': 'cancelled',
+    };
+    status = statusMap[status] ?? status;
+
     return CatBooking(
       id: json['id'],
-      ownerName: json['owner_name'],
-      ownerPhone: json['owner_phone'],
-      catName: json['cat_name'],
-      catBreed: json['cat_breed'],
-      bookingType: json['booking_type'],
-      productId: json['product_id'],
-      product: json['product'] != null ? Product.fromJson(json['product']) : null,
-      price: double.parse(json['price'].toString()),
-      startDate: DateTime.parse(json['start_date']),
-      endDate: json['end_date'] != null ? DateTime.parse(json['end_date']) : null,
-      status: json['status'],
-      branchId: json['branch_id'],
-      transactionId: json['transaction_id'],
-      createdAt: DateTime.parse(json['created_at']),
+      ownerName: json['nama_pemilik'] ?? json['owner_name'] ?? '',
+      ownerPhone: json['telepon_pemilik'] ?? json['owner_phone'] ?? '',
+      catName: json['nama_kucing'] ?? json['cat_name'] ?? '',
+      catBreed: json['ras_kucing'] ?? json['cat_breed'] ?? '',
+      bookingType: json['jenis_pemesanan'] ?? json['booking_type'] ?? '',
+      productId: json['id_produk'] ?? json['product_id'] ?? 0,
+      product: (json['produk'] != null)
+          ? Product.fromJson(json['produk'])
+          : (json['product'] != null ? Product.fromJson(json['product']) : null),
+      price: double.tryParse((json['harga'] ?? json['price'] ?? 0.0).toString()) ?? 0.0,
+      startDate: DateTime.parse(json['tanggal_mulai'] ?? json['start_date'] ?? DateTime.now().toIso8601String()),
+      endDate: json['tanggal_selesai'] != null 
+          ? DateTime.parse(json['tanggal_selesai']) 
+          : (json['end_date'] != null ? DateTime.parse(json['end_date']) : null),
+      status: status,
+      branchId: json['id_cabang'] ?? json['branch_id'] ?? 0,
+      transactionId: json['id_transaksi'] ?? json['transaction_id'],
+      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
     );
   }
 }

@@ -18,9 +18,9 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (! $user || ! Hash::check($request->password, $user->kata_sandi)) {
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                'email' => ['Kredensial yang diberikan tidak sesuai.'],
             ]);
         }
 
@@ -31,10 +31,13 @@ class AuthController extends Controller
             'token_type' => 'Bearer',
             'user' => [
                 'id' => $user->id,
-                'name' => $user->name,
+                'nama' => $user->nama,
+                'name' => $user->nama, // Compatibility
                 'email' => $user->email,
-                'role' => $user->role,
-                'branch_id' => $user->branch_id,
+                'peran' => $user->peran,
+                'role' => $user->peran, // Compatibility
+                'id_cabang' => $user->id_cabang,
+                'branch_id' => $user->id_cabang, // Compatibility
             ]
         ]);
     }
@@ -44,7 +47,7 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Logged out successfully'
+            'message' => 'Berhasil keluar'
         ]);
     }
 }

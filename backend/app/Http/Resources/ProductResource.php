@@ -8,7 +8,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class ProductResource extends JsonResource
 {
     /**
-     * Transform the resource into an array.
+     * Ubah resource menjadi array.
      *
      * @return array<string, mixed>
      */
@@ -16,15 +16,17 @@ class ProductResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
-            'description' => $this->description,
-            'price' => (float) $this->price,
-            'stock' => (int) $this->stock,
-            'branch_id' => $this->branch_id,
-            'image_path' => $this->image_path,
-            'image_url' => $this->image_path ? asset('storage/' . $this->image_path) : null,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'nama' => $this->nama,
+            'deskripsi' => $this->deskripsi,
+            'harga' => (float) $this->harga,
+            'stok' => (int) $this->stok,
+            'stok_minimum' => (int) $this->stok_minimum,
+            'id_cabang' => $this->id_cabang,
+            'jenis' => $this->jenis,
+            'path_gambar' => $this->path_gambar,
+            'url_gambar' => $this->path_gambar ? asset('storage/' . $this->path_gambar) : null,
+            'dibuat_pada' => $this->created_at,
+            'diperbarui_pada' => $this->updated_at,
         ];
     }
 }

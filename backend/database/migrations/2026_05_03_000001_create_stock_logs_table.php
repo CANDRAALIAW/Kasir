@@ -8,19 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('stock_logs', function (Blueprint $box) {
-            $box->id();
-            $box->foreignId('product_id')->constrained()->onDelete('cascade');
-            $box->foreignId('user_id')->constrained();
-            $box->enum('type', ['in', 'out']); // in = restock, out = adjustment/waste
-            $box->integer('quantity');
-            $box->string('note')->nullable();
-            $box->timestamps();
+        Schema::create('log_stok', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('id_produk');
+            $table->unsignedBigInteger('id_pengguna');
+            $table->foreign('id_produk')->references('id')->on('produk')->onDelete('cascade');
+            $table->foreign('id_pengguna')->references('id')->on('pengguna');
+            $table->enum('jenis', ['masuk', 'keluar']); // masuk = restock, keluar = penyesuaian/pembuangan
+            $table->integer('kuantitas');
+            $table->string('catatan')->nullable();
+            $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('stock_logs');
+        Schema::dropIfExists('log_stok');
     }
 };

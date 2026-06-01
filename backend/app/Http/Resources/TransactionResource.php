@@ -11,17 +11,25 @@ class TransactionResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'invoice_number' => $this->invoice_number,
-            'user_name' => $this->user->name ?? 'Unknown',
-            'branch_name' => $this->branch->name ?? 'Unknown',
+            'nomor_invoice' => $this->nomor_invoice,
+            'invoice_number' => $this->nomor_invoice, // Compatibility
+            'nama_pengguna' => $this->pengguna->nama ?? 'Tidak Diketahui',
+            'user_name' => $this->pengguna->nama ?? 'Tidak Diketahui', // Compatibility
+            'nama_cabang' => $this->cabang->nama ?? 'Tidak Diketahui',
+            'branch_name' => $this->cabang->nama ?? 'Tidak Diketahui', // Compatibility
             'total' => (float) $this->total,
             'status' => $this->status,
-            'payment_method' => $this->payment_method,
-            'payment_amount' => (float) $this->payment_amount,
-            'change_amount' => (float) $this->change_amount,
-            'details' => TransactionDetailResource::collection($this->whenLoaded('details')),
-            'created_at' => $this->created_at,
-            'formatted_date' => $this->created_at->format('d M Y H:i'),
+            'metode_pembayaran' => $this->metode_pembayaran,
+            'payment_method' => $this->metode_pembayaran, // Compatibility
+            'jumlah_bayar' => (float) $this->jumlah_bayar,
+            'payment_amount' => (float) $this->jumlah_bayar, // Compatibility
+            'jumlah_kembalian' => (float) $this->jumlah_kembalian,
+            'change_amount' => (float) $this->jumlah_kembalian, // Compatibility
+            'detail' => TransactionDetailResource::collection($this->whenLoaded('detailTransaksi')),
+            'details' => TransactionDetailResource::collection($this->whenLoaded('detailTransaksi')), // Compatibility
+            'dibuat_pada' => $this->created_at,
+            'tanggal_format' => $this->created_at->format('d M Y H:i'),
+            'formatted_date' => $this->created_at->format('d M Y H:i'), // Compatibility
         ];
     }
 }

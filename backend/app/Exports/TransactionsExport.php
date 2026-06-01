@@ -9,27 +9,27 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class TransactionsExport implements FromCollection, WithHeadings, WithMapping
 {
-    protected $branchId;
-    protected $startDate;
-    protected $endDate;
+    protected $idCabang;
+    protected $tanggalMulai;
+    protected $tanggalSelesai;
 
-    public function __construct($branchId = null, $startDate = null, $endDate = null)
+    public function __construct($idCabang = null, $tanggalMulai = null, $tanggalSelesai = null)
     {
-        $this->branchId = $branchId;
-        $this->startDate = $startDate;
-        $this->endDate = $endDate;
+        $this->idCabang = $idCabang;
+        $this->tanggalMulai = $tanggalMulai;
+        $this->tanggalSelesai = $tanggalSelesai;
     }
 
     public function collection()
     {
-        $query = Transaction::with(['user', 'branch']);
+        $query = Transaction::with(['pengguna', 'cabang']);
 
-        if ($this->branchId) {
-            $query->where('branch_id', $this->branchId);
+        if ($this->idCabang) {
+            $query->where('id_cabang', $this->idCabang);
         }
 
-        if ($this->startDate && $this->endDate) {
-            $query->whereBetween('created_at', [$this->startDate, $this->endDate]);
+        if ($this->tanggalMulai && $this->tanggalSelesai) {
+            $query->whereBetween('created_at', [$this->tanggalMulai, $this->tanggalSelesai]);
         }
 
         return $query->get();
@@ -39,7 +39,7 @@ class TransactionsExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             'ID Transaksi',
-            'No Invoice',
+            'Nomor Invoice',
             'Nama Kasir',
             'Cabang',
             'Total (IDR)',
@@ -50,18 +50,18 @@ class TransactionsExport implements FromCollection, WithHeadings, WithMapping
         ];
     }
 
-    public function map($transaction): array
+    public function map($transaksi): array
     {
         return [
-            $transaction->id,
-            $transaction->invoice_number,
-            $transaction->user->name,
-            $transaction->branch->name,
-            $transaction->total,
-            $transaction->status,
-            $transaction->created_at->translatedFormat('l'),
-            $transaction->created_at->format('d F Y'),
-            $transaction->created_at->format('H:i:s'),
+            $transaksi->id,
+            $transaksi->nomor_invoice,
+            $transaksi->pengguna->nama ?? '-',
+            $transaksi->cabang->nama ?? '-',
+            $transaksi->total,
+            $transaksi->status,
+            $transaksi->created_at->translatedFormat('l'),
+            $transaksi->created_at->format('d F Y'),
+            $transaksi->created_at->format('H:i:s'),
         ];
     }
 }

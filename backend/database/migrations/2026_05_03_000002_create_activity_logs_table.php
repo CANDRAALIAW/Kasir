@@ -8,19 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('activity_logs', function (Blueprint $box) {
-            $box->id();
-            $box->foreignId('user_id')->constrained();
-            $box->string('action'); // e.g., 'Update Price', 'Delete Product'
-            $box->string('description');
-            $box->json('properties')->nullable(); // stored old vs new values
-            $box->string('ip_address')->nullable();
-            $box->timestamps();
+        Schema::create('log_aktivitas', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('id_pengguna');
+            $table->foreign('id_pengguna')->references('id')->on('pengguna');
+            $table->string('aksi'); // contoh: 'Update Harga', 'Hapus Produk'
+            $table->string('deskripsi');
+            $table->json('properti')->nullable(); // menyimpan nilai lama vs baru
+            $table->string('alamat_ip')->nullable();
+            $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('activity_logs');
+        Schema::dropIfExists('log_aktivitas');
     }
 };

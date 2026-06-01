@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:100,1');
 
 // Protected routes (all authenticated users)
 Route::middleware('auth:sanctum')->group(function () {
@@ -19,7 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Branches (read-only, all roles)
     Route::get('/branches', function () {
-        return \App\Models\Branch::orderBy('name')->get(['id', 'name']);
+        return \App\Models\Branch::orderBy('nama')->get(['id', 'nama']);
     });
 
     // Products - read: all roles, write: admin only

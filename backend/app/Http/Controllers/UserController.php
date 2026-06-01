@@ -10,34 +10,44 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        // Only allow admins to list/manage users
-        if ($request->user()->role !== 'admin') {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        // Hanya admin yang dapat melihat/mengelola pengguna
+        if ($request->user()->peran !== 'admin') {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
         }
 
-        $users = User::where('role', 'kasir')->with('branch')->orderBy('name', 'asc')->get();
+        $users = User::where('peran', 'kasir')->with('cabang')->orderBy('nama', 'asc')->get();
         return response()->json($users);
     }
 
     public function store(Request $request)
     {
-        if ($request->user()->role !== 'admin') {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        if ($request->user()->peran !== 'admin') {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
+
+        if ($request->has('name')) {
+            $request->merge(['nama' => $request->name]);
+        }
+        if ($request->has('branch_id')) {
+            $request->merge(['id_cabang' => $request->branch_id]);
+        }
+        if ($request->has('password')) {
+            $request->merge(['kata_sandi' => $request->password]);
         }
 
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6',
-            'branch_id' => 'required|exists:branches,id',
+            'nama' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:pengguna',
+            'kata_sandi' => 'required|string|min:6',
+            'id_cabang' => 'required|exists:cabang,id',
         ]);
 
         $user = User::create([
-            'name' => $request->name,
+            'nama' => $request->nama,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'kasir',
-            'branch_id' => $request->branch_id,
+            'kata_sandi' => Hash::make($request->kata_sandi),
+            'peran' => 'kasir',
+            'id_cabang' => $request->id_cabang,
         ]);
 
         return response()->json($user, 201);
@@ -45,22 +55,32 @@ class UserController extends Controller
 
     public function update(Request $request, $id)
     {
-        if ($request->user()->role !== 'admin') {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        if ($request->user()->peran !== 'admin') {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
         }
 
-        $user = User::where('role', 'kasir')->findOrFail($id);
+        $user = User::where('peran', 'kasir')->findOrFail($id);
+
+        if ($request->has('name')) {
+            $request->merge(['nama' => $request->name]);
+        }
+        if ($request->has('branch_id')) {
+            $request->merge(['id_cabang' => $request->branch_id]);
+        }
+        if ($request->has('password')) {
+            $request->merge(['kata_sandi' => $request->password]);
+        }
 
         $request->validate([
-            'name' => 'string|max:255',
-            'email' => 'string|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:6',
-            'branch_id' => 'exists:branches,id',
+            'nama' => 'string|max:255',
+            'email' => 'string|email|max:255|unique:pengguna,email,' . $user->id,
+            'kata_sandi' => 'nullable|string|min:6',
+            'id_cabang' => 'exists:cabang,id',
         ]);
 
-        $data = $request->only(['name', 'email', 'branch_id']);
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
+        $data = $request->only(['nama', 'email', 'id_cabang']);
+        if ($request->filled('kata_sandi')) {
+            $data['kata_sandi'] = Hash::make($request->kata_sandi);
         }
 
         $user->update($data);
@@ -70,13 +90,13 @@ class UserController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        if ($request->user()->role !== 'admin') {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        if ($request->user()->peran !== 'admin') {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
         }
 
-        $user = User::where('role', 'kasir')->findOrFail($id);
+        $user = User::where('peran', 'kasir')->findOrFail($id);
         $user->delete();
 
-        return response()->json(['message' => 'User deleted successfully']);
+        return response()->json(['message' => 'Pengguna berhasil dihapus']);
     }
 }

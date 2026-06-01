@@ -7,27 +7,28 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Jalankan migrasi.
      */
     public function up(): void
     {
-        Schema::create('products', function (Blueprint $table) {
+        Schema::create('produk', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->decimal('price', 15, 2);
-            $table->integer('stock');
-            $table->string('image_path')->nullable();
-            $table->foreignId('branch_id')->constrained()->onDelete('cascade');
+            $table->string('nama');
+            $table->text('deskripsi')->nullable();
+            $table->decimal('harga', 15, 2);
+            $table->integer('stok');
+            $table->string('path_gambar')->nullable();
+            $table->unsignedBigInteger('id_cabang');
+            $table->foreign('id_cabang')->references('id')->on('cabang')->onDelete('cascade');
             $table->timestamps();
         });
     }
 
     /**
-     * Reverse the migrations.
+     * Balikkan migrasi.
      */
     public function down(): void
     {
-        Schema::dropIfExists('products');
+        Schema::dropIfExists('produk');
     }
 };

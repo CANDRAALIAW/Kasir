@@ -6,14 +6,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class ActivityLog extends Model
 {
-    protected $fillable = ['user_id', 'action', 'description', 'properties', 'ip_address'];
+    // Nama tabel database dalam Bahasa Indonesia
+    protected $table = 'log_aktivitas';
+
+    protected $fillable = ['id_pengguna', 'aksi', 'deskripsi', 'properti', 'alamat_ip'];
 
     protected $casts = [
-        'properties' => 'array'
+        'properti' => 'array'
     ];
 
+    public function pengguna()
+    {
+        return $this->belongsTo(User::class, 'id_pengguna');
+    }
+
+    // Alias untuk kompatibilitas
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'id_pengguna');
     }
 }

@@ -7,22 +7,22 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Jalankan migrasi.
      */
     public function up(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->string('type')->default('product')->after('image_path');
+        Schema::table('produk', function (Blueprint $table) {
+            $table->string('jenis')->default('produk')->after('path_gambar');
         });
     }
 
     /**
-     * Reverse the migrations.
+     * Balikkan migrasi.
      */
     public function down(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->dropColumn('type');
+        Schema::table('produk', function (Blueprint $table) {
+            $table->dropColumn('jenis');
         });
     }
 };

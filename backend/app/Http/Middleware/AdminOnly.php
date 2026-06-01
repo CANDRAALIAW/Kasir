@@ -9,8 +9,8 @@ class AdminOnly
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!$request->user() || $request->user()->role !== 'admin') {
-            return response()->json(['message' => 'Unauthorized. Admin access required.'], 403);
+        if (!$request->user() || $request->user()->peran !== 'admin') {
+            return response()->json(['message' => 'Tidak diizinkan. Diperlukan akses admin.'], 403);
         }
         return $next($request);
     }

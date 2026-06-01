@@ -7,45 +7,45 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Jalankan migrasi.
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('pengguna', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('nama');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->string('role')->default('kasir');
-            $table->foreignId('branch_id')->nullable();
+            $table->timestamp('email_terverifikasi_pada')->nullable();
+            $table->string('kata_sandi');
+            $table->string('peran')->default('kasir');
+            $table->unsignedBigInteger('id_cabang')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
 
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
+        Schema::create('token_reset_kata_sandi', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
-            $table->timestamp('created_at')->nullable();
+            $table->timestamp('dibuat_pada')->nullable();
         });
 
-        Schema::create('sessions', function (Blueprint $table) {
+        Schema::create('sesi', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
+            $table->unsignedBigInteger('id_pengguna')->nullable()->index();
+            $table->string('alamat_ip', 45)->nullable();
+            $table->text('agen_pengguna')->nullable();
+            $table->longText('muatan');
+            $table->integer('aktivitas_terakhir')->index();
         });
     }
 
     /**
-     * Reverse the migrations.
+     * Balikkan migrasi.
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('sessions');
+        Schema::dropIfExists('pengguna');
+        Schema::dropIfExists('token_reset_kata_sandi');
+        Schema::dropIfExists('sesi');
     }
 };

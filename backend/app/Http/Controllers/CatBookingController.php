@@ -9,11 +9,11 @@ class CatBookingController extends Controller
 {
     public function index(Request $request)
     {
-        $branchId = $request->query('branch_id');
-        $query = CatBooking::with('product');
+        $idCabang = $request->query('branch_id');
+        $query = CatBooking::with('produk');
 
-        if ($branchId) {
-            $query->where('branch_id', $branchId);
+        if ($idCabang) {
+            $query->where('id_cabang', $idCabang);
         }
 
         if ($request->has('status') && $request->status != 'all') {
@@ -23,9 +23,9 @@ class CatBookingController extends Controller
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('owner_name', 'like', "%{$search}%")
-                  ->orWhere('cat_name', 'like', "%{$search}%")
-                  ->orWhere('cat_breed', 'like', "%{$search}%");
+                $q->where('nama_pemilik', 'like', "%{$search}%")
+                  ->orWhere('nama_kucing', 'like', "%{$search}%")
+                  ->orWhere('ras_kucing', 'like', "%{$search}%");
             });
         }
 
@@ -34,66 +34,152 @@ class CatBookingController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->has('owner_name')) {
+            $request->merge(['nama_pemilik' => $request->owner_name]);
+        }
+        if ($request->has('owner_phone')) {
+            $request->merge(['telepon_pemilik' => $request->owner_phone]);
+        }
+        if ($request->has('cat_name')) {
+            $request->merge(['nama_kucing' => $request->cat_name]);
+        }
+        if ($request->has('cat_breed')) {
+            $request->merge(['ras_kucing' => $request->cat_breed]);
+        }
+        if ($request->has('booking_type')) {
+            $request->merge(['jenis_pemesanan' => $request->booking_type]);
+        }
+        if ($request->has('product_id')) {
+            $request->merge(['id_produk' => $request->product_id]);
+        }
+        if ($request->has('price')) {
+            $request->merge(['harga' => $request->price]);
+        }
+        if ($request->has('start_date')) {
+            $request->merge(['tanggal_mulai' => $request->start_date]);
+        }
+        if ($request->has('end_date')) {
+            $request->merge(['tanggal_selesai' => $request->end_date]);
+        }
+        if ($request->has('branch_id')) {
+            $request->merge(['id_cabang' => $request->branch_id]);
+        }
+        if ($request->has('status')) {
+            $statusMap = [
+                'pending' => 'menunggu',
+                'ongoing' => 'berlangsung',
+                'completed' => 'selesai',
+                'cancelled' => 'dibatalkan',
+            ];
+            $incomingStatus = $request->status;
+            if (isset($statusMap[$incomingStatus])) {
+                $request->merge(['status' => $statusMap[$incomingStatus]]);
+            }
+        }
+
         $request->validate([
-            'owner_name' => 'required|string',
-            'owner_phone' => 'required|string',
-            'cat_name' => 'required|string',
-            'cat_breed' => 'required|string',
-            'booking_type' => 'required|string|in:grooming,pethotel',
-            'product_id' => 'required|exists:products,id',
-            'price' => 'required|numeric',
-            'start_date' => 'required',
-            'end_date' => 'nullable',
-            'branch_id' => 'required|exists:branches,id',
+            'nama_pemilik' => 'required|string',
+            'telepon_pemilik' => 'required|string',
+            'nama_kucing' => 'required|string',
+            'ras_kucing' => 'required|string',
+            'jenis_pemesanan' => 'required|string|in:grooming,pethotel',
+            'id_produk' => 'required|exists:produk,id',
+            'harga' => 'required|numeric',
+            'tanggal_mulai' => 'required',
+            'tanggal_selesai' => 'nullable',
+            'id_cabang' => 'required|exists:cabang,id',
         ]);
 
-        $booking = CatBooking::create([
-            'owner_name' => $request->owner_name,
-            'owner_phone' => $request->owner_phone,
-            'cat_name' => $request->cat_name,
-            'cat_breed' => $request->cat_breed,
-            'booking_type' => $request->booking_type,
-            'product_id' => $request->product_id,
-            'price' => $request->price,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'status' => 'pending',
-            'branch_id' => $request->branch_id,
+        $pemesanan = CatBooking::create([
+            'nama_pemilik' => $request->nama_pemilik,
+            'telepon_pemilik' => $request->telepon_pemilik,
+            'nama_kucing' => $request->nama_kucing,
+            'ras_kucing' => $request->ras_kucing,
+            'jenis_pemesanan' => $request->jenis_pemesanan,
+            'id_produk' => $request->id_produk,
+            'harga' => $request->harga,
+            'tanggal_mulai' => $request->tanggal_mulai,
+            'tanggal_selesai' => $request->tanggal_selesai,
+            'status' => 'menunggu',
+            'id_cabang' => $request->id_cabang,
         ]);
 
-        return response()->json($booking->load('product'), 201);
+        return response()->json($pemesanan->load('produk'), 201);
     }
 
     public function update(Request $request, $id)
     {
-        $booking = CatBooking::findOrFail($id);
+        $pemesanan = CatBooking::findOrFail($id);
+
+        if ($request->has('owner_name')) {
+            $request->merge(['nama_pemilik' => $request->owner_name]);
+        }
+        if ($request->has('owner_phone')) {
+            $request->merge(['telepon_pemilik' => $request->owner_phone]);
+        }
+        if ($request->has('cat_name')) {
+            $request->merge(['nama_kucing' => $request->cat_name]);
+        }
+        if ($request->has('cat_breed')) {
+            $request->merge(['ras_kucing' => $request->cat_breed]);
+        }
+        if ($request->has('booking_type')) {
+            $request->merge(['jenis_pemesanan' => $request->booking_type]);
+        }
+        if ($request->has('product_id')) {
+            $request->merge(['id_produk' => $request->product_id]);
+        }
+        if ($request->has('price')) {
+            $request->merge(['harga' => $request->price]);
+        }
+        if ($request->has('start_date')) {
+            $request->merge(['tanggal_mulai' => $request->start_date]);
+        }
+        if ($request->has('end_date')) {
+            $request->merge(['tanggal_selesai' => $request->end_date]);
+        }
+        if ($request->has('branch_id')) {
+            $request->merge(['id_cabang' => $request->branch_id]);
+        }
+        if ($request->has('status')) {
+            $statusMap = [
+                'pending' => 'menunggu',
+                'ongoing' => 'berlangsung',
+                'completed' => 'selesai',
+                'cancelled' => 'dibatalkan',
+            ];
+            $incomingStatus = $request->status;
+            if (isset($statusMap[$incomingStatus])) {
+                $request->merge(['status' => $statusMap[$incomingStatus]]);
+            }
+        }
 
         $request->validate([
-            'owner_name' => 'string',
-            'owner_phone' => 'string',
-            'cat_name' => 'string',
-            'cat_breed' => 'string',
-            'booking_type' => 'string|in:grooming,pethotel',
-            'product_id' => 'exists:products,id',
-            'price' => 'numeric',
-            'status' => 'string|in:pending,ongoing,completed,cancelled',
-            'transaction_id' => 'nullable|exists:transactions,id',
+            'nama_pemilik' => 'string',
+            'telepon_pemilik' => 'string',
+            'nama_kucing' => 'string',
+            'ras_kucing' => 'string',
+            'jenis_pemesanan' => 'string|in:grooming,pethotel',
+            'id_produk' => 'exists:produk,id',
+            'harga' => 'numeric',
+            'status' => 'string|in:menunggu,berlangsung,selesai,dibatalkan',
+            'id_transaksi' => 'nullable|exists:transaksi,id',
         ]);
 
-        $booking->update($request->only([
-            'owner_name', 'owner_phone', 'cat_name', 'cat_breed',
-            'booking_type', 'product_id', 'price', 'start_date', 'end_date',
-            'status', 'transaction_id',
+        $pemesanan->update($request->only([
+            'nama_pemilik', 'telepon_pemilik', 'nama_kucing', 'ras_kucing',
+            'jenis_pemesanan', 'id_produk', 'harga', 'tanggal_mulai', 'tanggal_selesai',
+            'status', 'id_transaksi',
         ]));
 
-        return response()->json($booking->load('product'));
+        return response()->json($pemesanan->load('produk'));
     }
 
     public function destroy($id)
     {
-        $booking = CatBooking::findOrFail($id);
-        $booking->delete();
+        $pemesanan = CatBooking::findOrFail($id);
+        $pemesanan->delete();
 
-        return response()->json(['message' => 'Booking deleted']);
+        return response()->json(['message' => 'Pemesanan berhasil dihapus']);
     }
 }

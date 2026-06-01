@@ -11,75 +11,75 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * Isi database aplikasi.
      */
     public function run(): void
     {
-        // 1. Create Branches
-        $branches = [];
+        // 1. Buat Cabang
+        $cabang = [];
         for ($i = 1; $i <= 3; $i++) {
-            $branches[] = \App\Models\Branch::create([
-                'name' => "Earth Petshop Branch $i",
+            $cabang[] = \App\Models\Branch::create([
+                'nama' => "Earth Petshop Cabang $i",
             ]);
         }
 
-        // 2. Create Admin
-        \App\Models\User::create([
-            'name' => 'Admin Earth',
+        // 2. Buat Admin
+        User::create([
+            'nama' => 'Admin Earth',
             'email' => 'admin@earthpetshop.com',
-            'password' => \Illuminate\Support\Facades\Hash::make('password'),
-            'role' => 'admin',
-            'branch_id' => null,
+            'kata_sandi' => \Illuminate\Support\Facades\Hash::make('password'),
+            'peran' => 'admin',
+            'id_cabang' => null,
         ]);
 
-        // 3. Create Cashiers
-        foreach ($branches as $index => $branch) {
-            \App\Models\User::create([
-                'name' => "Kasir " . ($index + 1),
+        // 3. Buat Kasir
+        foreach ($cabang as $index => $cab) {
+            User::create([
+                'nama' => "Kasir " . ($index + 1),
                 'email' => "kasir" . ($index + 1) . "@earthpetshop.com",
-                'password' => \Illuminate\Support\Facades\Hash::make('password'),
-                'role' => 'kasir',
-                'branch_id' => $branch->id,
+                'kata_sandi' => \Illuminate\Support\Facades\Hash::make('password'),
+                'peran' => 'kasir',
+                'id_cabang' => $cab->id,
             ]);
         }
 
-        // 4. Create Initial Products
-        $catFoodItems = [
-            ['name' => 'Whiskas Adult Tuna', 'price' => 25000, 'description' => 'Tuna flavored cat food'],
-            ['name' => 'Royal Canin Mother & Baby', 'price' => 150000, 'description' => 'Premium food for kittens'],
-            ['name' => 'Me-O Cat Food', 'price' => 35000, 'description' => 'Nutritious seafood flavor'],
-            ['name' => 'Pro Plan Kitten', 'price' => 120000, 'description' => 'High protein for growth'],
+        // 4. Buat Produk Awal
+        $itemMakananKucing = [
+            ['nama' => 'Whiskas Adult Tuna', 'harga' => 25000, 'deskripsi' => 'Makanan kucing rasa tuna'],
+            ['nama' => 'Royal Canin Mother & Baby', 'harga' => 150000, 'deskripsi' => 'Makanan premium untuk anak kucing'],
+            ['nama' => 'Me-O Cat Food', 'harga' => 35000, 'deskripsi' => 'Makanan bergizi rasa seafood'],
+            ['nama' => 'Pro Plan Kitten', 'harga' => 120000, 'deskripsi' => 'Protein tinggi untuk pertumbuhan'],
         ];
 
-        foreach ($branches as $branch) {
-            foreach ($catFoodItems as $item) {
+        foreach ($cabang as $cab) {
+            foreach ($itemMakananKucing as $item) {
                 \App\Models\Product::create([
-                    'name' => $item['name'],
-                    'description' => $item['description'],
-                    'price' => $item['price'],
-                    'stock' => 50,
-                    'branch_id' => $branch->id,
-                    'image_path' => null,
+                    'nama' => $item['nama'],
+                    'deskripsi' => $item['deskripsi'],
+                    'harga' => $item['harga'],
+                    'stok' => 50,
+                    'id_cabang' => $cab->id,
+                    'path_gambar' => null,
                 ]);
             }
 
-            // Seed services
-            $services = [
-                ['name' => 'Grooming Mandi Sehat', 'price' => 50000, 'description' => 'Paket mandi standar kucing agar bersih dan wangi'],
-                ['name' => 'Grooming Mandi Kutu/Jamur', 'price' => 75000, 'description' => 'Mandi khusus dengan sampo anti kutu dan jamur kucing'],
-                ['name' => 'Pet Hotel Standard (Kandang AC)', 'price' => 45000, 'description' => 'Fasilitas kandang bersih standar ber-AC untuk kucing'],
-                ['name' => 'Pet Hotel VIP (Kamar Bermain)', 'price' => 85000, 'description' => 'Fasilitas kandang luas dengan playground ber-AC'],
+            // Isi data layanan
+            $layanan = [
+                ['nama' => 'Grooming Mandi Sehat', 'harga' => 50000, 'deskripsi' => 'Paket mandi standar kucing agar bersih dan wangi'],
+                ['nama' => 'Grooming Mandi Kutu/Jamur', 'harga' => 75000, 'deskripsi' => 'Mandi khusus dengan sampo anti kutu dan jamur kucing'],
+                ['nama' => 'Pet Hotel Standard (Kandang AC)', 'harga' => 45000, 'deskripsi' => 'Fasilitas kandang bersih standar ber-AC untuk kucing'],
+                ['nama' => 'Pet Hotel VIP (Kamar Bermain)', 'harga' => 85000, 'deskripsi' => 'Fasilitas kandang luas dengan playground ber-AC'],
             ];
 
-            foreach ($services as $service) {
+            foreach ($layanan as $srv) {
                 \App\Models\Product::create([
-                    'name' => $service['name'],
-                    'description' => $service['description'],
-                    'price' => $service['price'],
-                    'stock' => 9999, // dummy high stock for services
-                    'branch_id' => $branch->id,
-                    'type' => 'service',
-                    'image_path' => null,
+                    'nama' => $srv['nama'],
+                    'deskripsi' => $srv['deskripsi'],
+                    'harga' => $srv['harga'],
+                    'stok' => 9999, // stok dummy tinggi untuk layanan
+                    'id_cabang' => $cab->id,
+                    'jenis' => 'layanan',
+                    'path_gambar' => null,
                 ]);
             }
         }
